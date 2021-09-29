@@ -8,21 +8,21 @@ This use-case project is provided Faktion. In this project, we have to devlop an
 ----------
 ### Project Guidelines
 - Repository: `faktion-anomaly-detection`
-- Type of Challenge: `Learning & Consolidation `
+- Type of Challenge: `Use-case`
 - Duration: `2 weeks`
 - Deadline: `14/10/2021`
 - Team Challenge : `Team (3 people)`
 -------
 ### Data
 
-The dataset fprovided for this project contains a set of images with normal dices, and a set with anormal dices
+The dataset provided for this project contains a set of images with normal dices, and a set with anormal dices
 <img alt="Normal Dice" src="assets/normal_dice_2.jpg" />
 <img alt="Anormal Dice" src="assets/anormal_dice_2.jpg" />
 
 --------
 ### Prerequisites
 
-- **Python3.8+**: The main language for this project
+- **Python3.8+**
 
 ### Installation
 
