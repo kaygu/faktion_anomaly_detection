@@ -17,7 +17,7 @@ This use-case project is provided Faktion. In this project, we have to devlop an
 
 The dataset provided for this project contains a set of images with normal dices, and a set with anormal dices
 <img alt="Normal Dice" src="assets/normal_dice_2.jpg" />
-<img alt="Anormal Dice" src="assets/anormal_dice_2.jpg" />
+<img alt="Anormal Dice" src="assets/anomalous_dice_2.jpg" />
 
 --------
 ### Prerequisites
