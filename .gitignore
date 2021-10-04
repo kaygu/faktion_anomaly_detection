@@ -2,3 +2,6 @@ env/
 .env/
 
 data/
+
+.DS_Store
+test.py
