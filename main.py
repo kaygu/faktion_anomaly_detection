@@ -1,130 +1,202 @@
+import tensorflow as tf
+from tensorflow.keras import layers, models
+# from tensorflow.keras.preprocessing.image import ImageDataGenerator
 import matplotlib.pyplot as plt
 import pandas as pd
-import seaborn as sns
+import time
 import numpy as np
-
-import keras
-from keras.models import Sequential
-from keras.layers import Dense, Conv2D, MaxPool2D, Flatten, Dropout
-from keras.preprocessing.image import ImageDataGenerator
-from tensorflow.keras.optimizers import Adam
-
-from sklearn.metrics import classification_report, confusion_matrix
-from sklearn.model_selection import train_test_split
-
-import tensorflow as tf
-
-import cv2
-
+import matplotlib.image as img
+from scipy import signal
 import os
+from PIL import Image
+from sklearn.model_selection import train_test_split
+import time
+import pandas as pd
 
-from glob import glob
+import split_train_val_test
 
-anomalous_data_dir = os.path.join('.','assets',  'data', 'anomalous_dice', '*.jpg')
-normal_data_dir = os.path.join('.','assets',  'data', 'normal_dice', '*')
+split_train_val_test.split()
 
-anomalous_files = glob(anomalous_data_dir)
-print(f"{len(anomalous_files)} anomalous files found")
+train_folder = os.path.join('.', 'data', 'normal_dice', 'train')
+# Flow training images in batches of 32 using train_datagen generator
+train_generator = tf.keras.utils.image_dataset_from_directory(
+    directory=train_folder,
+    image_size=(128, 128),
+    color_mode='grayscale',
+    batch_size=32,
+    shuffle=True,
+    seed=42
+)
 
-normal_files_folders = glob(normal_data_dir)
-normal_files_paths = []
-labels = []
-for folder in normal_files_folders:
-    files = glob(folder + '\\*.jpg')
-    normal_files_paths += files
-    labels += [int(os.path.basename(folder))] * len(files)
+validation_folder = os.path.join('.', 'data', 'normal_dice', 'val')
+# Flow training images in batches of 32 using train_datagen generator
+validation_generator = tf.keras.utils.image_dataset_from_directory(
+    directory=validation_folder,
+    image_size=(128, 128),
+    color_mode='grayscale',
+    batch_size=32,
+    shuffle=True,
+    seed=42
+)
 
-print(f"{len(normal_files_paths)} normal files found")
-print(f"{len(labels)} normal files labels found")
-# for x in range(len(anomalous_files)):
-#    print(anomalous_files[x])
+test_folder = os.path.join('.', 'data', 'normal_dice', 'test')
+# Flow training images in batches of 32 using train_datagen generator
+test_generator = tf.keras.utils.image_dataset_from_directory(
+    directory=test_folder,
+    image_size=(128, 128),
+    color_mode='grayscale',
+    batch_size=1,
+    shuffle=False,
+    seed=42
+)
 
-img_size = 224
-normal_images = []
+anomalous_folder = os.path.join('.', 'data', 'anomalous_dice')
+# Flow training images in batches of 32 using train_datagen generator
+anomalous_generator = tf.keras.utils.image_dataset_from_directory(
+    directory=anomalous_folder,
+    image_size=(128, 128),
+    color_mode='grayscale',
+    batch_size=1,
+    shuffle=False,
+    seed=42
+)
 
-for img in normal_files_paths:
-    try:
-        img_arr = cv2.imread(img)[..., ::-1]  # convert BGR to RGB format
-        resized_arr = cv2.resize(img_arr, (img_size, img_size))  # Reshaping images to preferred size
-        normal_images.append(resized_arr)
-    except Exception as e:
-        print(e)
+AUTOTUNE = tf.data.AUTOTUNE
 
-plt.figure(figsize=(5, 5))
-plt.imshow(normal_images[1000])
-plt.title(labels[1000])
-plt.show()
+train_ds = train_generator.cache().prefetch(buffer_size=AUTOTUNE)
+val_ds = validation_generator.cache().prefetch(buffer_size=AUTOTUNE)
 
-X_train, X_test, y_train, y_test = train_test_split(normal_images, labels, test_size=0.33, random_state=42)
+num_classes = 11
 
-# Normalize the data
-X_train = np.array(X_train) / 255
-X_test = np.array(X_test) / 255
+model = tf.keras.Sequential([
+    layers.experimental.preprocessing.Rescaling(1. / 255, input_shape=(128, 128, 1)),
+    layers.Conv2D(32, 3, activation='relu'),
+    layers.MaxPooling2D(),
+    layers.Conv2D(32, 3, activation='relu'),
+    layers.MaxPooling2D(),
+    layers.Conv2D(32, 3, activation='relu'),
+    layers.MaxPooling2D(),
+    layers.Flatten(),
+    layers.Dense(128, activation='relu'),
+    layers.Dense(num_classes)
+])
 
-X_train.reshape(-1, img_size, img_size, 1)
-y_train = np.array(y_train)
+model.compile(
+    optimizer='adam',
+    loss=tf.losses.SparseCategoricalCrossentropy(from_logits=True),
+    metrics=['accuracy'])
 
-X_test.reshape(-1, img_size, img_size, 1)
-y_test = np.array(y_test)
+history = model.fit(train_ds, validation_data=val_ds,
+                    epochs=3, batch_size=32)
 
-datagen = ImageDataGenerator(
-    featurewise_center=False,  # set input mean to 0 over the dataset
-    samplewise_center=False,  # set each sample mean to 0
-    featurewise_std_normalization=False,  # divide inputs by std of the dataset
-    samplewise_std_normalization=False,  # divide each input by its std
-    zca_whitening=False,  # apply ZCA whitening
-    rotation_range=30,  # randomly rotate images in the range (degrees, 0 to 180)
-    zoom_range=0.2,  # Randomly zoom image
-    width_shift_range=0.1,  # randomly shift images horizontally (fraction of total width)
-    height_shift_range=0.1,  # randomly shift images vertically (fraction of total height)
-    horizontal_flip=True,  # randomly flip images
-    vertical_flip=False)  # randomly flip images
+test_images = []
+test_labels = []
+for images, labels in test_generator.take(-1):  # -1 take all the images.
+    test_images.append(images.numpy())
+    test_labels.append(labels.numpy())
 
-datagen.fit(X_train)
+test_images = np.squeeze(test_images)
 
-model = Sequential()
-model.add(Conv2D(32, 3, padding="same", activation="relu", input_shape=(224, 224, 3)))
-model.add(MaxPool2D())
+class_names = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
-model.add(Conv2D(32, 3, padding="same", activation="relu"))
-model.add(MaxPool2D())
 
-model.add(Conv2D(64, 3, padding="same", activation="relu"))
-model.add(MaxPool2D())
-model.add(Dropout(0.4))
+def plot_image(predictions_array, true_label, img):
+    plt.grid(False)
+    plt.xticks([])
+    plt.yticks([])
+    plt.imshow(img)
 
-model.add(Flatten())
-model.add(Dense(128, activation="relu"))
-model.add(Dense(11, activation="softmax"))
+    predicted_label = np.argmax(predictions_array)
+    if predicted_label == true_label:
+        color = 'blue'
+    else:
+        color = 'red'
 
-model.summary()
+    plt.xlabel("Label predicted : {}".format(class_names[predicted_label]) + "\n" +
+               "Similarity value : {:2.0f}".format(np.max(predictions_array)) + "\n" +
+               "Image test label : {}".format(class_names[true_label]), color=color)
 
-opt = Adam(lr=0.000001)
-model.compile(optimizer=opt, loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True), metrics=['accuracy'])
 
-history = model.fit(X_train, y_train, epochs=500, validation_data=(X_test, y_test))
+def plot_value_array(predictions_array, true_label):
+    plt.grid(False)
+    plt.xticks(range(len(class_names)))
+    plt.yticks([])
+    thisplot = plt.bar(range(len(class_names)), predictions_array, color="#777777")
+    min_value = min(predictions_array) * 0.1
+    max_value = max(predictions_array) * 0.1
+    plt.ylim([min(predictions_array) + min_value, max(predictions_array) + max_value])
+    predicted_label = np.argmax(predictions_array)
 
-acc = history.history['accuracy']
-val_acc = history.history['val_accuracy']
-loss = history.history['loss']
-val_loss = history.history['val_loss']
+    thisplot[predicted_label].set_color('red')
+    thisplot[true_label].set_color('blue')
 
-epochs_range = range(500)
 
-plt.figure(figsize=(15, 15))
-plt.subplot(2, 2, 1)
-plt.plot(epochs_range, acc, label='Training Accuracy')
-plt.plot(epochs_range, val_acc, label='Validation Accuracy')
-plt.legend(loc='lower right')
-plt.title('Training and Validation Accuracy')
+def plot_class(img_class, class_value):
+    plt.grid(False)
+    plt.xticks([])
+    plt.yticks([])
+    plt.imshow(img_class)
+    plt.xlabel("Class value: {}".format(class_value))
 
-plt.subplot(2, 2, 2)
-plt.plot(epochs_range, loss, label='Training Loss')
-plt.plot(epochs_range, val_loss, label='Validation Loss')
-plt.legend(loc='upper right')
-plt.title('Training and Validation Loss')
-plt.show()
 
-predictions = model.predict_classes(X_test)
-predictions = predictions.reshape(1, -1)[0]
-print(classification_report(y_test, predictions, target_names=['Rugby (Class 0)', 'Soccer (Class 1)']))
+train_images = []
+train_class = []
+for images, labels in train_ds.take(1):
+    train_images.append(images.numpy())
+    train_class.append(labels.numpy())
+
+train_images = np.squeeze(train_images)
+
+predictions = model.predict(test_generator)
+anomalous_predictions = model.predict(anomalous_generator)
+
+anomalous_images = []
+anomalous_labels = []
+for images, labels in anomalous_generator.take(-1):  # -1 take all the images.
+    anomalous_images.append(images.numpy())
+    anomalous_labels.append(labels.numpy())
+
+anomalous_images = np.squeeze(anomalous_images)
+
+
+def final_plot_normal(i):
+    for j in range(len(train_class[0])):
+        if train_class[0][j] == test_labels[i][0]:
+            train_img_index = j
+        else:
+            next
+
+    plt.figure(figsize=(10, 7))
+    plt.subplot(1, 3, 1)
+    plt.gca().set_title('Image to predict')
+    plot_image(predictions[i], test_labels[i][0], test_images[i])
+    plt.subplot(1, 3, 2)
+    plt.gca().set_title('Similarity values')
+    plot_value_array(predictions[i], test_labels[i][0])
+    plt.subplot(1, 3, 3)
+    plt.gca().set_title('Random image with same class')
+    plot_class(train_images[train_img_index], test_labels[i][0])
+    plt.show()
+
+
+def final_plot_anomalous(i):
+    for j in range(len(train_class[0])):
+        if train_class[0][j] == np.argmax(anomalous_predictions[i]):
+            train_img_index = j
+        else:
+            next
+    plt.figure(figsize=(10, 7))
+    plt.subplot(1, 3, 1)
+    plt.gca().set_title('Image to predict')
+    plot_image(anomalous_predictions[i], anomalous_labels[i][0], anomalous_images[i])
+    plt.subplot(1, 3, 2)
+    plt.gca().set_title('Similarity values')
+    plot_value_array(anomalous_predictions[i], anomalous_labels[i][0])
+    plt.subplot(1, 3, 3)
+    plt.gca().set_title('Random image with same class')
+    plot_class(train_images[train_img_index], np.argmax(anomalous_predictions[i]))
+    plt.show()
+
+
+final_plot_normal(10)
+final_plot_anomalous(4)
