@@ -1,23 +1,11 @@
 import tensorflow as tf
-from tensorflow.keras import layers, models
-# from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras import layers
 import matplotlib.pyplot as plt
-import pandas as pd
-import time
 import numpy as np
-import matplotlib.image as img
-from scipy import signal
 import os
-from PIL import Image
-from sklearn.model_selection import train_test_split
-import time
-import pandas as pd
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
-import split_train_val_test
-
-split_train_val_test.split()
-
-train_folder = os.path.join('.', 'data', 'normal_dice', 'train')
+train_folder = os.path.abspath('./data/normal_dice/train')
 # Flow training images in batches of 32 using train_datagen generator
 train_generator = tf.keras.utils.image_dataset_from_directory(
     directory=train_folder,
@@ -28,7 +16,7 @@ train_generator = tf.keras.utils.image_dataset_from_directory(
     seed=42
 )
 
-validation_folder = os.path.join('.', 'data', 'normal_dice', 'val')
+validation_folder = os.path.abspath('./data/normal_dice/val')
 # Flow training images in batches of 32 using train_datagen generator
 validation_generator = tf.keras.utils.image_dataset_from_directory(
     directory=validation_folder,
@@ -39,7 +27,7 @@ validation_generator = tf.keras.utils.image_dataset_from_directory(
     seed=42
 )
 
-test_folder = os.path.join('.', 'data', 'normal_dice', 'test')
+test_folder = os.path.abspath('./data/normal_dice/test')
 # Flow training images in batches of 32 using train_datagen generator
 test_generator = tf.keras.utils.image_dataset_from_directory(
     directory=test_folder,
@@ -50,7 +38,7 @@ test_generator = tf.keras.utils.image_dataset_from_directory(
     seed=42
 )
 
-anomalous_folder = os.path.join('.', 'data', 'anomalous_dice')
+anomalous_folder = os.path.abspath('./data/anomalous_dice')
 # Flow training images in batches of 32 using train_datagen generator
 anomalous_generator = tf.keras.utils.image_dataset_from_directory(
     directory=anomalous_folder,
@@ -86,8 +74,7 @@ model.compile(
     loss=tf.losses.SparseCategoricalCrossentropy(from_logits=True),
     metrics=['accuracy'])
 
-history = model.fit(train_ds, validation_data=val_ds,
-                    epochs=3, batch_size=32)
+history = model.fit(train_ds, validation_data=val_ds, epochs=3, batch_size=32)
 
 test_images = []
 test_labels = []
