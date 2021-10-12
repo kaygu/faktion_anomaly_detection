@@ -4,6 +4,9 @@ from get_data import get_data
 from model import build_model
 
 if __name__ == "__main__":
+    """
+      Run model without any user interface
+    """
     x, y = get_data()
     try:
         model = tf.keras.models.load_model('model/myModel.h5')

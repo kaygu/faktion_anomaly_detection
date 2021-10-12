@@ -38,6 +38,18 @@ pip install -r requirements.txt
 python main.py
 ```
 
+### Docker
+
+Build
+```bash
+docker build -t anomaly_detection:latest .
+```
+Run
+```
+docker run -p 8501:8501 anomaly_detection:latest
+```
+
+
 ### Contributors
 
 - [Camille De Neef](https://github.com/kaygu)
