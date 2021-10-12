@@ -36,7 +36,11 @@ pip install -r requirements.txt
 ```bash
 python main.py
 ```
-
+----------
+### How it works
+1. Upload your image.
+2. During the upload it will use Neural network (CNN) to classify the dice.
+3. Then for the second part it use OpenCV to detect anomaly and confirm if it's a broken dice or not.
 ### Contributors
 
 - [Camille De Neef](https://github.com/kaygu)
