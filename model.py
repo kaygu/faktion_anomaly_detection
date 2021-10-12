@@ -5,18 +5,18 @@ from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
 def build_model(x, y):
 
-    x_train_val, x_test, y_train_val, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
-    x_train, x_val, y_train, y_val = train_test_split(x_train_val, y_train_val, test_size=0.2, random_state=42)
+    x_train_val, x_test, y_train_val, y_test = train_test_split(x, y, test_size=0.15, random_state=123)
+    x_train, x_val, y_train, y_val = train_test_split(x_train_val, y_train_val, test_size=0.2, random_state=123)
 
     # Model architecture
     model = tf.keras.models.Sequential([
-        tf.keras.layers.Conv2D(32, (3,3), activation='relu', input_shape=(128, 128, 1)),
+        tf.keras.layers.Conv2D(32, 3, activation='relu', input_shape=(128, 128, 1)),
         tf.keras.layers.MaxPooling2D(2, 2),
-        tf.keras.layers.Conv2D(64, (3,3), activation='relu'),
+        tf.keras.layers.Conv2D(64, 3, activation='relu'),
         tf.keras.layers.MaxPooling2D(2,2),
-        tf.keras.layers.Conv2D(128, (3,3), activation='relu'),
+        tf.keras.layers.Conv2D(128, 3, activation='relu'),
         tf.keras.layers.MaxPooling2D(2,2),
-        tf.keras.layers.Conv2D(128, (3,3), activation='relu'),
+        tf.keras.layers.Conv2D(128, 3, activation='relu'),
         tf.keras.layers.MaxPooling2D(2,2),
         tf.keras.layers.Flatten(),
         tf.keras.layers.Dropout(.2),
