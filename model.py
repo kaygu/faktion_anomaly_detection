@@ -1,6 +1,5 @@
 
 from sklearn.model_selection import train_test_split
-import matplotlib.pyplot as plt
 import tensorflow as tf
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
@@ -39,7 +38,7 @@ def build_model(x, y):
     train_datagen = ImageDataGenerator(rescale=1./255)
     validation_datagen = ImageDataGenerator(rescale=1./255)
 
-    # Flow training images in batches of 20 using train_datagen generator
+    # Flow training images in batches of 64 using train_datagen generator
     train_generator = train_datagen.flow(
         # This is the source directory for training images    
         x_train,

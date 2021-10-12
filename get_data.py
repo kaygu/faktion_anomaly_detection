@@ -17,10 +17,11 @@ def get_JPGs(dir: str) -> list:
 
 def get_matrices(files: list) -> list:
     matrices = []
-    for file in files[1:]:
+    for file in files:
       matrices.append(cv2.imread(file, cv2.IMREAD_GRAYSCALE))
     return matrices
-  
+
+
 def get_data():
     # Get dices
     defect_dice_files = get_JPGs('data/anomalous_dice')
