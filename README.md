@@ -10,14 +10,14 @@ This use-case project is provided Faktion. In this project, we have to devlop an
 - Repository: `faktion-anomaly-detection`
 - Type of Challenge: `Use-case`
 - Duration: `2 weeks`
-- Deadline: `14/10/2021`
+- Deadline: `13/10/2021`
 - Team Challenge : `Team (3 people)`
 -------
 ### Data
 
 The dataset provided for this project contains a set of images with normal dices, and a set with anormal dices
 <img alt="Normal Dice" src="assets/normal_dice_2.jpg" />
-<img alt="Anormal Dice" src="assets/anormal_dice_2.jpg" />
+<img alt="Anormal Dice" src="assets/anomalous_dice_2.jpg" />
 
 --------
 ### Prerequisites
@@ -37,8 +37,27 @@ pip install -r requirements.txt
 python main.py
 ```
 
+### Docker
+
+Build
+```bash
+docker build -t anomaly_detection:latest .
+```
+Run
+```
+docker run -p 8501:8501 anomaly_detection:latest
+```
+----------
+
+### How it works
+1. Upload your image.
+2. During the upload it will use Neural network (CNN) to classify the dice.
+3. Then for the second part it use OpenCV to detect anomaly and confirm if it's a broken dice or not.
+
 ### Contributors
 
 - [Camille De Neef](https://github.com/kaygu)
 - [Jesus Bueno](https://github.com/jejobueno) 
 - [Kadri Salija](https://github.com/misterkadrix)
+
+
