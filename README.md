@@ -34,7 +34,7 @@ pip install -r requirements.txt
 ### Usage
 
 ```bash
-python main.py
+streamlit run app.py
 ```
 
 ### Docker
