@@ -21,7 +21,7 @@ def loadExamples():
 
 @st.cache(allow_output_mutation=True)
 def thresh_values():
-    return joblib.load('./data/values_thresh_mask.pkl')
+    return joblib.load('./data/values_thresh_mask.pkl'), joblib.load('./data/values_thresh_mask_up.pkl')
 
 
 @st.cache(allow_output_mutation=True)
@@ -31,7 +31,7 @@ def loadModel():
 
 model = loadModel()
 train_classes, train_img_ex = loadExamples()
-df = thresh_values()
+df, df_thresh_up = thresh_values()
 st.sidebar.title("DICE ANOMALY DETECTION")
 st.sidebar.write('\n')
 uploaded_file = st.sidebar.file_uploader('Please Upload the image of the dice', type="jpg")
@@ -55,12 +55,19 @@ def plot_from_class(prediction):
 
 def apply_mask(img_arr, prediction, img_size=128):
     resized_arr = cv2.resize(img_arr, (img_size, img_size))  # Reshaping images to preferred size
-    _, thresh = cv2.threshold(resized_arr, 50, 255, cv2.THRESH_BINARY_INV)
+    _, thresh1 = cv2.threshold(resized_arr, 80, 255, cv2.THRESH_BINARY_INV)
     min = df[['min', 'max']].iloc[np.argmax(prediction)][0]
     max = df[['min', 'max']].iloc[np.argmax(prediction)][1]
-    meanpix = 'Mean pixel: {:.2f}'.format(np.mean(thresh))
+    meanpix = 'Mean pixel: {:.2f}'.format(np.mean(thresh1))
+    print(min, max)
 
-    return min < np.mean(thresh) < max, meanpix, thresh
+    _, thresh2 = cv2.threshold(resized_arr, 180, 255, cv2.THRESH_BINARY_INV)
+    min2 = df_thresh_up[['min', 'max']].iloc[np.argmax(prediction)][0]
+    max2 = df_thresh_up[['min', 'max']].iloc[np.argmax(prediction)][1]
+    meanpix2 = 'Mean pixel: {:.2f}'.format(np.mean(thresh2))
+    print(min2, max2)
+
+    return min < np.mean(thresh1) < max and min2 < np.mean(thresh2) < max2, meanpix, meanpix2
 
 
 if uploaded_file is not None:
@@ -73,7 +80,7 @@ if uploaded_file is not None:
     prediction = model.predict(img[None, :, :])
     train_img_index = np.where(train_classes == np.argmax(prediction))[0]
     col1, col2, col3= st.beta_columns(3)
-    assert_mask, meanpix, thresh = apply_mask(img[None, :, :], prediction)
+    assert_mask, meanpix, meanpix2 = apply_mask(img[None, :, :], prediction)
 
     with col1:
         st.write('Uploaded dice:')
@@ -85,12 +92,14 @@ if uploaded_file is not None:
         ax.imshow(img, cmap='gray', vmin=0, vmax=255)
         st.pyplot(fig)
         st.markdown(meanpix)
+        st.markdown(meanpix2)
 
 
     with col2:
         st.write('Predicted class')
         st.pyplot(plot_from_class(prediction))
         st.markdown('Class mean pixel: {:.2f}'.format(df[['mean']].iloc[np.argmax(prediction)][0]))
+        st.markdown('Class mean pixel: {:.2f}'.format(df_thresh_up[['mean']].iloc[np.argmax(prediction)][0]))
 
     if assert_mask:
         st.info('NORMAL DICE')
